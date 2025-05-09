@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartFindr</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="bg-[#f6fcff] h-screen flex flex-col items-center justify-center">
+  <h1 class="mb-8 text-5xl font-bold text-transparent bg-gradient-to-r from-blue-500 to-pink-500 bg-clip-text">
+    SmartFindr
+  </h1>
+  <form action="/search" method="get"
+    class="bg-white border border-gray-300 rounded-xl flex items-center px-4 py-2 w-[400px]">
+    <input type="text" name="q" placeholder="Search smartphones..."
+      class="flex-grow text-sm text-gray-700 bg-transparent outline-none" required />
+    <button type="submit">🔍</button>
+  </form>
+</body>
+
+</html>
