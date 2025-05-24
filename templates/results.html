@@ -4,14 +4,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Search Results</title>
+  <title>SmartFindr</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="p-6 bg-white">
   <!-- Header -->
-  <div class="flex w-full max-w-[746px] mx-14 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-    <!-- Judul -->
+  <div class="w-full max-w-[746px] mx-14 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
     <div class="text-center sm:text-left">
       <h1
         class="text-3xl font-bold text-transparent sm:text-5xl bg-gradient-to-r from-blue-500 to-pink-500 bg-clip-text">
@@ -20,30 +19,39 @@
     </div>
 
     <!-- Form Pencarian -->
-    <div class="w-full">
+    <div class="w-full relative">
       <form action="/search" method="get"
         class="flex items-center w-full px-4 py-2 bg-white border border-gray-300 rounded-xl">
-        <input type="text" name="q" placeholder="Search smartphones..."
-          class="flex-grow text-sm text-gray-700 bg-transparent outline-none" required />
+        <input type="text" name="q" autocomplete="off" placeholder="Search smartphones..."
+          class="flex-grow text-sm text-gray-700 bg-transparent outline-none" value="{{ query | default('') }}"
+          required />
         <button type="submit" class="text-lg">🔍</button>
       </form>
+
+      <!-- Dynamic Suggestion Box -->
+      <div id="suggestion-box"
+        class="absolute z-10 w-full bg-white border border-gray-200 rounded-md mt-1 shadow hidden max-h-60 overflow-y-auto">
+      </div>
     </div>
   </div>
 
   <!-- Result Heading -->
+  {% if query %}
   <div class="text-lg font-semibold text-left mx-4 sm:mx-16 w-full max-w-[489px] px-4 mb-4">
     Results For: <span class="text-blue-600">{{ query }}</span>
   </div>
+  {% endif %}
 
   {% if results %}
   <div class="flex flex-col items-center">
-    {% for phone in results %} {% if loop.index0 % 2 == 0 %}
+    {% for phone in results %}
+    {% if loop.index0 % 2 == 0 %}
     <div class="flex flex-col justify-center gap-6 mb-6 sm:flex-row">
       {% endif %}
 
       <!-- Card -->
-      <a href="{{ phone.url }}" target="_blank"
-        class="w-full sm:w-[489px] h-[155px] relative block hover:shadow-lg transition-shadow duration-200">
+      <a href="{{ phone.url.replace('/smartphone', '') }}" target="_blank"
+        class="w-full sm:w-[489px] h-[155px] relative block hover:shadow-lg transition-shadow duration-200 rounded-lg overflow-hidden">
         <div class="w-full h-full absolute bg-white rounded-[10px] shadow-md border border-[#e9e9e9]"></div>
         <div class="absolute left-[8px] top-[8px] w-[123px] h-[139px]">
           <img src="{{ phone.image_url }}" alt="{{ phone.name }}" class="object-contain w-full h-full rounded-md" />
@@ -93,17 +101,102 @@
           <img src="/static/assets/icon/battery.png" alt="Battery Icon" class="w-full h-full" />
         </div>
         <div class="absolute left-[335px] top-[80px] text-[#282828] text-sm font-normal">
-          {{ phone.battery}} mAh
+          {{ phone.battery }} mAh
         </div>
       </a>
 
       {% if loop.index0 % 2 == 1 or loop.last %}
     </div>
-    {% endif %} {% endfor %}
+    {% endif %}
+    {% endfor %}
   </div>
   {% else %}
-  <p class="text-center">No results found.</p>
+  <p class="text-center text-gray-500 mt-12">No results found.</p>
   {% endif %}
+
+  <!-- Pagination -->
+  {% if total_pages > 1 %}
+  <div class="flex justify-center mt-8 space-x-1 items-center">
+    {% if current_page > 1 %}
+    <a href="{{ url_for('search_page', q=query, sort_by=sort_by, order=order, page=current_page - 1) }}"
+      class="px-3 py-2 rounded-lg border border-gray-300 hover:bg-blue-500 hover:text-white">
+      ← Prev
+    </a>
+    {% endif %}
+
+    {% if current_page > 3 %}
+    <a href="{{ url_for('search_page', q=query, sort_by=sort_by, order=order, page=1) }}"
+      class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-blue-500 hover:text-white">1</a>
+    {% endif %}
+
+    {% if current_page > 4 %}
+    <span class="px-2 py-2">...</span>
+    {% endif %}
+
+    {% for p in range(current_page-2, current_page+3) %}
+    {% if 1 <= p <=total_pages %} <a href="{{ url_for('search_page', q=query, sort_by=sort_by, order=order, page=p) }}"
+      class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-blue-500 hover:text-white {% if p == current_page %}bg-blue-500 text-white{% endif %}">
+      {{ p }}
+      </a>
+      {% endif %}
+      {% endfor %}
+
+      {% if current_page < total_pages - 3 %} <span class="px-2 py-2">...</span>
+        {% endif %}
+
+        {% if current_page < total_pages - 2 %} <a
+          href="{{ url_for('search_page', q=query, sort_by=sort_by, order=order, page=total_pages) }}"
+          class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-blue-500 hover:text-white">{{ total_pages }}</a>
+          {% endif %}
+
+          {% if current_page < total_pages %} <a
+            href="{{ url_for('search_page', q=query, sort_by=sort_by, order=order, page=current_page + 1) }}"
+            class="px-3 py-2 rounded-lg border border-gray-300 hover:bg-blue-500 hover:text-white">
+            Next →
+            </a>
+            {% endif %}
+  </div>
+  {% endif %}
+
+  <script>
+    const input = document.querySelector('input[name="q"]');
+    const suggestionBox = document.getElementById('suggestion-box');
+    let timeout = null;
+
+    input.addEventListener('input', () => {
+      clearTimeout(timeout);
+      const query = input.value.trim();
+      if (query.length === 0) {
+        suggestionBox.innerHTML = '';
+        suggestionBox.classList.add('hidden');
+        return;
+      }
+
+      timeout = setTimeout(() => {
+        fetch(`/suggest?q=${encodeURIComponent(query)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.length === 0) {
+              suggestionBox.innerHTML = '<div class="p-2 text-sm text-gray-500">Tidak ada saran.</div>';
+            } else {
+              suggestionBox.innerHTML = data.map(phone => `
+                  <a href="/search?q=${encodeURIComponent(phone.name)}" class="flex items-center p-2 hover:bg-gray-100">
+                    <img src="${phone.image_url}" class="w-12 h-12 object-contain mr-3 rounded" />
+                    <span class="text-sm text-gray-800 truncate">${phone.name}</span>
+                  </a>
+                `).join('');
+            }
+            suggestionBox.classList.remove('hidden');
+          });
+      }, 300);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!suggestionBox.contains(e.target) && e.target !== input) {
+        suggestionBox.classList.add('hidden');
+      }
+    });
+  </script>
 </body>
 
 </html>

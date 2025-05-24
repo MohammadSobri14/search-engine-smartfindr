@@ -5,19 +5,68 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SmartFindr</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-[#f6fcff] h-screen flex flex-col items-center justify-center">
   <h1 class="mb-8 text-5xl font-bold text-transparent bg-gradient-to-r from-blue-500 to-pink-500 bg-clip-text">
     SmartFindr
   </h1>
-  <form action="/search" method="get"
-    class="bg-white border border-gray-300 rounded-xl flex items-center px-4 py-2 w-[400px]">
-    <input type="text" name="q" placeholder="Search smartphones..."
-      class="flex-grow text-sm text-gray-700 bg-transparent outline-none" required />
-    <button type="submit">🔍</button>
-  </form>
+
+  <!-- Form Pencarian -->
+  <div class="w-[400px] relative">
+    <form action="/search" method="get" class="bg-white border border-gray-300 rounded-xl flex items-center px-4 py-2">
+      <input type="text" autocomplete="off" name="q" placeholder="Search smartphones..."
+        class="flex-grow text-sm text-gray-700 bg-transparent outline-none" required />
+      <button type="submit">🔍</button>
+    </form>
+
+    <!-- Suggestion Box -->
+    <div id="suggestion-box"
+      class="absolute z-10 w-full bg-white border border-gray-200 rounded-md mt-1 shadow hidden max-h-60 overflow-y-auto">
+    </div>
+  </div>
+
+  <!-- Script Suggestion -->
+  <script>
+    const input = document.querySelector('input[name="q"]');
+    const suggestionBox = document.getElementById('suggestion-box');
+    let timeout = null;
+
+    input.addEventListener('input', () => {
+      clearTimeout(timeout);
+      const query = input.value.trim();
+      if (query.length === 0) {
+        suggestionBox.innerHTML = '';
+        suggestionBox.classList.add('hidden');
+        return;
+      }
+
+      timeout = setTimeout(() => {
+        fetch(`/suggest?q=${encodeURIComponent(query)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.length === 0) {
+              suggestionBox.innerHTML = '<div class="p-2 text-sm text-gray-500">Tidak ada saran.</div>';
+            } else {
+              suggestionBox.innerHTML = data.map(phone => `
+                <a href="/search?q=${encodeURIComponent(phone.name)}" class="flex items-center p-2 hover:bg-gray-100">
+                  <img src="${phone.image_url}" class="w-12 h-12 object-contain mr-3 rounded" />
+                  <span class="text-sm text-gray-800 truncate">${phone.name}</span>
+                </a>
+              `).join('');
+            }
+            suggestionBox.classList.remove('hidden');
+          });
+      }, 300);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!suggestionBox.contains(e.target) && e.target !== input) {
+        suggestionBox.classList.add('hidden');
+      }
+    });
+  </script>
 </body>
 
 </html>
