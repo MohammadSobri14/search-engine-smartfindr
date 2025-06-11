@@ -4,7 +4,8 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import re
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# Multilingual semantic model
+model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
 
 def get_connection():
     return create_engine("mysql+mysqlconnector://root:@localhost/smartphone_db")
@@ -29,42 +30,48 @@ def extract_filters_from_query(query):
     query = query.lower()
     filters = {}
 
-    if "murah" in query:
+    # Harga
+    if "murah" in query or "budget" in query or "terjangkau" in query or "low end" in query:
         filters["price_max"] = 3000000
-    if match := re.search(r"(di bawah|maksimal|max|<)\s*rp?\s?(\d+)", query):
+    if match := re.search(r"(di bawah|maksimal|max|kurang dari|<)\s*rp?\s?(\d+)", query):
         filters["price_max"] = int(match.group(2)) * 1000
-    if match := re.search(r"(di atas|minimal|>)\s*rp?\s?(\d+)", query):
+    if match := re.search(r"(di atas|minimal|lebih dari|>)\s*rp?\s?(\d+)", query):
         filters["price_min"] = int(match.group(2)) * 1000
 
+    # RAM
     if match := re.search(r"ram\s*(\d+)\s*gb", query):
         filters["ram_min"] = int(match.group(1))
     elif match := re.search(r"(\d+)\s*gb\s*ram", query):
         filters["ram_min"] = int(match.group(1))
-    elif "ram besar" in query or "ram tinggi" in query:
+    elif any(kw in query for kw in ["ram besar", "ram tinggi", "ram bagus", "ram cepat"]):
         filters["ram_min"] = 6
 
+    # Kamera
     if match := re.search(r"kamera\s*(\d+)\s*mp", query):
         filters["camera_min"] = int(match.group(1))
     elif match := re.search(r"(\d+)\s*mp\s*kamera", query):
         filters["camera_min"] = int(match.group(1))
-    elif "kamera bagus" in query or "kamera jernih" in query:
+    elif any(kw in query for kw in ["kamera bagus", "kamera jernih", "kamera tajam", "kamera bening"]):
         filters["camera_min"] = 50
 
+    # Baterai
     if match := re.search(r"baterai\s*(\d+)", query):
         filters["battery_min"] = int(match.group(1))
-    elif "baterai besar" in query or "baterai tahan lama" in query:
+    elif any(kw in query for kw in ["baterai besar", "baterai tahan lama", "baterai awet", "daya tahan tinggi"]):
         filters["battery_min"] = 5000
 
+    # Layar
     if match := re.search(r"layar\s*(\d+(\.\d+)?)", query):
         filters["screen_min"] = float(match.group(1))
-    elif "layar besar" in query:
+    elif any(kw in query for kw in ["layar besar", "layar lebar", "layar luas", "display besar"]):
         filters["screen_min"] = 6.5
 
+    # Tahun Rilis
     if match := re.search(r"tahun\s*(\d{4})", query):
         filters["year"] = int(match.group(1))
     elif match := re.search(r"\b(20[1-2][0-9]|2030)\b", query):
         filters["year"] = int(match.group(0))
-
+    
     return filters
 
 def search_smartphones(query="", price_min=None, price_max=None, ram_min=None,
