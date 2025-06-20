@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SmartFindr</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="{{ url_for('static', filename='css/output.css') }}" rel="stylesheet">
 </head>
 
 <body class="bg-[#f6fcff] h-screen flex flex-col items-center justify-center">
@@ -15,7 +15,7 @@
 
   <!-- Form Pencarian -->
   <div class="w-[400px] relative">
-    <form action="/search" method="get" class="bg-white border border-gray-300 rounded-xl flex items-center px-4 py-2">
+    <form action="/search" method="get" class="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-xl">
       <input type="text" autocomplete="off" name="q" placeholder="Search smartphones..."
         class="flex-grow text-sm text-gray-700 bg-transparent outline-none" required />
       <button type="submit">🔍</button>
@@ -23,7 +23,7 @@
 
     <!-- Suggestion Box -->
     <div id="suggestion-box"
-      class="absolute z-10 w-full bg-white border border-gray-200 rounded-md mt-1 shadow hidden max-h-60 overflow-y-auto">
+      class="absolute z-10 hidden w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow max-h-60">
     </div>
   </div>
 
@@ -51,7 +51,7 @@
             } else {
               suggestionBox.innerHTML = data.map(phone => `
                 <a href="/search?q=${encodeURIComponent(phone.name)}" class="flex items-center p-2 hover:bg-gray-100">
-                  <img src="${phone.image_url}" class="w-12 h-12 object-contain mr-3 rounded" />
+                  <img src="${phone.image_url}" class="object-contain w-12 h-12 mr-3 rounded" />
                   <span class="text-sm text-gray-800 truncate">${phone.name}</span>
                 </a>
               `).join('');

@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SmartFindr</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="{{ url_for('static', filename='css/output.css') }}" rel="stylesheet">
 </head>
 
 <body class="p-6 bg-white">
@@ -19,7 +19,7 @@
     </div>
 
     <!-- Form Pencarian -->
-    <div class="w-full relative">
+    <div class="relative w-full">
       <form action="/search" method="get"
         class="flex items-center w-full px-4 py-2 bg-white border border-gray-300 rounded-xl">
         <input type="text" name="q" autocomplete="off" placeholder="Search smartphones..."
@@ -30,7 +30,7 @@
 
       <!-- Dynamic Suggestion Box -->
       <div id="suggestion-box"
-        class="absolute z-10 w-full bg-white border border-gray-200 rounded-md mt-1 shadow hidden max-h-60 overflow-y-auto">
+        class="absolute z-10 hidden w-full mt-1 overflow-y-auto bg-white border border-gray-200 rounded-md shadow max-h-60">
       </div>
     </div>
   </div>
@@ -111,22 +111,22 @@
     {% endfor %}
   </div>
   {% else %}
-  <p class="text-center text-gray-500 mt-12">No results found.</p>
+  <p class="mt-12 text-center text-gray-500">No results found.</p>
   {% endif %}
 
   <!-- Pagination -->
   {% if total_pages > 1 %}
-  <div class="flex justify-center mt-8 space-x-1 items-center">
+  <div class="flex items-center justify-center mt-8 space-x-1">
     {% if current_page > 1 %}
     <a href="{{ url_for('search_page', q=query, sort_by=sort_by, order=order, page=current_page - 1) }}"
-      class="px-3 py-2 rounded-lg border border-gray-300 hover:bg-blue-500 hover:text-white">
+      class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-blue-500 hover:text-white">
       ← Prev
     </a>
     {% endif %}
 
     {% if current_page > 3 %}
     <a href="{{ url_for('search_page', q=query, sort_by=sort_by, order=order, page=1) }}"
-      class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-blue-500 hover:text-white">1</a>
+      class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-blue-500 hover:text-white">1</a>
     {% endif %}
 
     {% if current_page > 4 %}
@@ -146,12 +146,12 @@
 
         {% if current_page < total_pages - 2 %} <a
           href="{{ url_for('search_page', q=query, sort_by=sort_by, order=order, page=total_pages) }}"
-          class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-blue-500 hover:text-white">{{ total_pages }}</a>
+          class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-blue-500 hover:text-white">{{ total_pages }}</a>
           {% endif %}
 
           {% if current_page < total_pages %} <a
             href="{{ url_for('search_page', q=query, sort_by=sort_by, order=order, page=current_page + 1) }}"
-            class="px-3 py-2 rounded-lg border border-gray-300 hover:bg-blue-500 hover:text-white">
+            class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-blue-500 hover:text-white">
             Next →
             </a>
             {% endif %}
@@ -181,7 +181,7 @@
             } else {
               suggestionBox.innerHTML = data.map(phone => `
                   <a href="/search?q=${encodeURIComponent(phone.name)}" class="flex items-center p-2 hover:bg-gray-100">
-                    <img src="${phone.image_url}" class="w-12 h-12 object-contain mr-3 rounded" />
+                    <img src="${phone.image_url}" class="object-contain w-12 h-12 mr-3 rounded" />
                     <span class="text-sm text-gray-800 truncate">${phone.name}</span>
                   </a>
                 `).join('');

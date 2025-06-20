@@ -26,7 +26,7 @@ def load_to_mysql():
     conn = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="",  # Ganti sesuai MySQL kamu
+        password="",
         database="smartphone_db"
     )
     cursor = conn.cursor()
